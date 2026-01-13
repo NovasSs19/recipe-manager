@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+        Recipe
+        Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
+
+
+        .main-logo {
+            text-align: center;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: -1px;
+        }
+        .main-logo span { color: #007bff; }
+
+        /* Auth Container */
+        .auth-container { background: white; max-width: 400px; margin: 0 auto 50px auto; padding: 0; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+
+        .tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid #ddd; cursor: pointer; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; transition: 0.3s; outline: none;}
+        .tab-btn:hover { background: #e9ecef; }
+        .tab-btn.active { background: white; color: #007bff; border-bottom: 3px solid #007bff; }
+
+        .form-content { padding: 30px; }
+
+        /* Main App Container */
+        .app-container { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 20px; }
+
+        h2, h3 { color: #333; margin-top: 0; }
+        input, button { display: block; width: 100%; margin-bottom: 15px; padding: 12px; border-radius: 5px; border: 1px solid #ddd; box-sizing: border-box; }
+
+        button { cursor: pointer; font-weight: bold; border: none; transition: 0.3s; font-size: 16px; }
+        .btn-green { background-color: #28a745; color: white; }
+        .btn-green:hover { background-color: #218838; }
+
+        .btn-red { background-color: #dc3545; color: white; width: auto; float: right; padding: 5px 15px; font-size: 14px; }
+        .btn-red:hover { background-color: #c82333; }
+
+        .btn-yellow { background-color: #ffc107; color: #333; width: auto; float: right; margin-right: 10px; padding: 5px 15px; font-size: 14px; }
+        .btn-yellow:hover { background-color: #e0a800; }
+
+        .btn-blue { background-color: #007bff; color: white; }
+        .btn-blue:hover { background-color: #0056b3; }
+
+        .hidden { display: none !important; }
+
+        .recipe-card { background: #fff; padding: 20px; margin-bottom: 15px; border-left: 5px solid #007bff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 4px; }
+
+        .msg-box { text-align: center; margin-bottom: 15px; font-size: 14px; min-height: 20px; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+
+        #cancel-btn { background-color: #6c757d; color: white; display: none; }
+
+
+
+    </style>
+</head>
+<body>
+
+<div class="main-logo">
+    Recipe<span>Manager</span>
+</div>
+
+<div id="auth-section"
+     class="auth-container">
+    <div class="tabs">
+        <button type="button"
+                class="tab-btn active"
+                id="tab-login"
+                onclick="switchTab('login')">
+            Login
+        </button>
+        <button type="button"
+                class="tab-btn"
+                id="tab-register"
+                onclick="switchTab('register')">
+            Register
+        </button>
+    </div>
+
+    <div id="login-form"
+         class="form-content">
+        <h2 style="text-align: center; color: #555;">
+            Welcome
+            Back</h2>
+        <div id="login-msg"
+             class="msg-box"></div>
+        <input type="email"
+               id="login-email"
+               placeholder="Email (e.g., test@test.com)">
+        <input type="password"
+               id="login-password"
+               placeholder="Password">
+        <button onclick="login()"
+                class="btn-blue">
+            Login
+            to
+            Dashboard
+        </button>
+    </div>
+
+    <div id="register-form"
+         class="form-content hidden">
+        <h2 style="text-align: center; color: #555;">
+            Create
+            Account</h2>
+        <div id="register-msg"
+             class="msg-box"></div>
+        <input type="email"
+               id="reg-email"
+               placeholder="Email">
+        <input type="password"
+               id="reg-password"
+               placeholder="Password">
+        <button onclick="register()"
+                class="btn-green">
+            Create
+            Account
+        </button>
+    </div>
+</div>
+
+<div id="app-section"
+     class="hidden">
+    <div class="app-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>
+                My
+                Recipes</h2>
+            <button onclick="logout()"
+                    style="width: auto; background: #666; color: white; padding: 8px 15px;">
+                Logout
+            </button>
+        </div>
+
+        <div style="background: #e9ecef; padding: 20px; margin-bottom: 20px; border-radius: 8px; margin-top: 20px;">
+            <h3 id="form-title">
+                Add
+                New
+                Recipe</h3>
+            <input type="hidden"
+                   id="edit-id">
+            <input type="text"
+                   id="title"
+                   placeholder="Recipe Title (e.g., Tomato Soup)">
+            <input type="text"
+                   id="desc"
+                   placeholder="Description (e.g., With fresh basil...)">
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveRecipe()"
+                        id="save-btn"
+                        class="btn-green">
+                    Add
+                    +
+                </button>
+                <button onclick="resetForm()"
+                        id="cancel-btn">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <div id="recipe-list"></div>
+    </div>
+</div>
+
+<script>
+        console.log("Script loaded successfully!");
+
+        const API_URL = "http://localhost:8080";
+        let allRecipes = [];
+
+        // --- TABS LOGIC ---
+        function switchTab(tabName) {
+            const loginForm = document.getElementById("login-form");
+            const registerForm = document.getElementById("register-form");
+            const loginBtn = document.getElementById("tab-login");
+            const registerBtn = document.getElementById("tab-register");
+            const loginMsg = document.getElementById("login-msg");
+            const regMsg = document.getElementById("register-msg");
+
+            loginMsg.innerText = "";
+            regMsg.innerText = "";
+
+            if (tabName === 'login') {
+                loginForm.classList.remove("hidden");
+                registerForm.classList.add("hidden");
+                loginBtn.classList.add("active");
+                registerBtn.classList.remove("active");
+            } else {
+                loginForm.classList.add("hidden");
+                registerForm.classList.remove("hidden");
+                loginBtn.classList.remove("active");
+                registerBtn.classList.add("active");
+            }
+        }
+
+        // --- AUTH LOGIC ---
+        async function login() {
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+            const msgBox = document.getElementById("login-msg");
+
+            if (!email || !password) {
+                msgBox.innerText = "Please enter email and password.";
+                msgBox.className = "msg-box error";
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + "/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    document.getElementById("auth-section").classList.add("hidden");
+                    document.getElementById("app-section").classList.remove("hidden");
+                    // Giriş yapınca ana başlığı biraz küçültelim ki yer kaplamasın
+                    document.querySelector(".main-logo").style.display = "none";
+                    loadRecipes();
+                } else {
+                    msgBox.innerText = "Invalid email or password!";
+                    msgBox.className = "msg-box error";
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                msgBox.innerText = "Connection error!";
+                msgBox.className = "msg-box error";
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById("reg-email").value;
+            const password = document.getElementById("reg-password").value;
+            const msgBox = document.getElementById("register-msg");
+
+            if(!email || !password) {
+                msgBox.innerText = "Please fill in all fields.";
+                msgBox.className = "msg-box error";
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + "/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    switchTab('login');
+                    const loginMsg = document.getElementById("login-msg");
+                    loginMsg.innerText = "Registration successful! Please login.";
+                    loginMsg.className = "msg-box success";
+
+                    document.getElementById("reg-email").value = "";
+                    document.getElementById("reg-password").value = "";
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    msgBox.innerText = data.message || "Registration failed. Email might be taken.";
+                    msgBox.className = "msg-box error";
+                }
+            } catch (error) {
+                console.error("Register error:", error);
+                msgBox.innerText = "Connection error!";
+                msgBox.className = "msg-box error";
+            }
+        }
+
+        function logout() {
+            window.location.reload();
+        }
+
+        // --- APP LOGIC ---
+        async function loadRecipes() {
+            try {
+                const response = await fetch(API_URL + "/recipes");
+                if (response.ok) {
+                    allRecipes = await response.json();
+                    renderList();
+                }
+            } catch (error) {
+                console.error("Load recipes error:", error);
+            }
+        }
+
+        function renderList() {
+            const listDiv = document.getElementById("recipe-list");
+            listDiv.innerHTML = "";
+
+            allRecipes.forEach(recipe => {
+                listDiv.innerHTML += `
+                    <div class="recipe-card">
+                        <div style="overflow: hidden;">
+                            <button class="btn-red" onclick="deleteRecipe(${recipe.id})">Delete</button>
+                            <button class="btn-yellow" onclick="startEdit(${recipe.id})">Edit</button>
+                        </div>
+                        <h3>${recipe.title}</h3>
+                        <p>${recipe.description}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function startEdit(id) {
+            const recipe = allRecipes.find(r => r.id === id);
+            if (!recipe) return;
+
+            document.getElementById("title").value = recipe.title;
+            document.getElementById("desc").value = recipe.description;
+            document.getElementById("edit-id").value = recipe.id;
+
+            document.getElementById("save-btn").innerText = "Save Changes";
+            document.getElementById("save-btn").classList.remove("btn-green");
+            document.getElementById("save-btn").classList.add("btn-blue");
+            document.getElementById("form-title").innerText = "Edit Recipe";
+            document.getElementById("cancel-btn").style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById("title").value = "";
+            document.getElementById("desc").value = "";
+            document.getElementById("edit-id").value = "";
+
+            document.getElementById("save-btn").innerText = "Add +";
+            document.getElementById("save-btn").classList.remove("btn-blue");
+            document.getElementById("save-btn").classList.add("btn-green");
+            document.getElementById("form-title").innerText = "Add New Recipe";
+            document.getElementById("cancel-btn").style.display = "none";
+        }
+
+        async function saveRecipe() {
+            const title = document.getElementById("title").value;
+            const description = document.getElementById("desc").value;
+            const id = document.getElementById("edit-id").value;
+
+            if (!title) { alert("Please enter a recipe title!"); return; }
+
+            let url = API_URL + "/recipes";
+            let method = "POST";
+
+            if (id) {
+                url = API_URL + "/recipes/" + id;
+                method = "PUT";
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (response.ok) {
+                resetForm();
+                loadRecipes();
+            } else {
+                alert("Operation failed! Are you authorized?");
+            }
+        }
+
+        async function deleteRecipe(id) {
+            if(!confirm("Are you sure you want to delete this?")) return;
+            const response = await fetch(API_URL + "/recipes/" + id, { method: "DELETE" });
+            if (response.ok) loadRecipes();
+        }
+
+
+
+</script>
+</body>
+</html>
