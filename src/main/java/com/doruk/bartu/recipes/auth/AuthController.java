@@ -75,6 +75,6 @@ public class AuthController {
 
         session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
 
-        return ResponseEntity.ok(new LoginResponse("Login successful"));
+        return ResponseEntity.ok(new LoginResponse("Login successful", user.getId(), user.getEmail()));
     }
 }
