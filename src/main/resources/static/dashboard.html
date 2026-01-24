@@ -1,95 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Recipe Manager</title>
-  <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        .logout-btn { background-color: #dc3545; color: white; padding: 10px 20px; border: none; cursor: pointer; }
-        .recipe-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; background-color: #f9f9f9; }
-        .add-section { margin-top: 30px; padding: 20px; background-color: #e9ecef; border-radius: 5px; }
-        input { padding: 10px; width: 60%; }
-        button { padding: 10px; cursor: pointer; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Recipes - Recipe Manager</title>
+    <style>
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: #333;
+        }
+
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        h1 { margin: 0; color: #764ba2; font-size: 24px; }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover { background: #c0392b; transform: scale(1.05); }
+
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+
+        .add-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .add-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .add-box input:focus { border-color: #764ba2; }
+
+        .add-btn {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .add-btn:hover { background: #5a387e; }
+
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .recipe-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: default;
+        }
+
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .recipe-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .recipe-desc {
+            font-size: 14px;
+            color: #777;
+        }
+
+
+        .loading { text-align: center; color: white; font-size: 18px; margin-top: 50px; }
     </style>
 </head>
 <body>
 
 <header>
-  <h1>My Recipes</h1>
-  <button class="logout-btn" onclick="logout()">Logout</button>
+    <h1>🍳 Recipe Manager</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
 
-<div id="recipe-list">
-  <p>Loading recipes...</p>
-</div>
+<div class="container">
 
-<div class="add-section">
-  <h3>Add New Recipe</h3>
-  <input type="text" id="recipe-name" placeholder="Enter recipe name (e.g. Pasta)">
-  <button onclick="addRecipe()" style="background-color: #007bff; color: white; border: none;">Add Recipe</button>
+    <div class="add-box">
+        <input type="text" id="recipe-name" placeholder="Enter a new recipe name (e.g. Sushi)">
+        <button class="add-btn" onclick="addRecipe()">+ Add Recipe</button>
+    </div>
+
+    <div id="recipe-grid" class="recipe-grid">
+        <div class="loading">Loading recipes...</div>
+    </div>
 </div>
 
 <script>
-        // Check authentication immediately when page loads
-        window.onload = function() {
-            fetchRecipes();
-        };
 
-        async function fetchRecipes() {
-            try {
-                const response = await fetch("/recipes");
+    window.onload = function() {
+        fetchRecipes();
+    };
 
-                // If user is NOT logged in (401), redirect to Login Page
-                if (response.status === 401) {
-                    window.location.href = "/login.html";
-                    return;
-                }
 
-                const recipes = await response.json();
-                const listDiv = document.getElementById("recipe-list");
-                listDiv.innerHTML = ""; // Clear loading text
+    async function fetchRecipes() {
+        try {
+            const response = await fetch("/recipes");
 
-                if (recipes.length === 0) {
-                    listDiv.innerHTML = "<p>No recipes found. Add one below!</p>";
-                }
 
-                recipes.forEach(recipe => {
-                    const div = document.createElement("div");
-                    div.className = "recipe-card";
-                    div.innerHTML = `<strong>${recipe.name}</strong>`;
-                    // Add more details here if your Recipe object has them
-                    listDiv.appendChild(div);
-                });
-
-            } catch (error) {
-                console.error("Error fetching recipes:", error);
+            if (response.status === 401) {
+                window.location.href = "/";
+                return;
             }
-        }
 
-        async function addRecipe() {
-            const name = document.getElementById("recipe-name").value;
-            if (!name) return alert("Please enter a recipe name");
+            const recipes = await response.json();
+            const grid = document.getElementById("recipe-grid");
+            grid.innerHTML = "";
 
-            const response = await fetch("/recipes", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: name }) // Adjust field name if your DTO is different
+            if (recipes.length === 0) {
+                grid.innerHTML = "<p style='color:white; text-align:center; width:100%;'>No recipes yet. Add one above!</p>";
+                return;
+            }
+
+
+            recipes.forEach(recipe => {
+                const card = document.createElement("div");
+                card.className = "recipe-card";
+                card.innerHTML = `
+                    <div class="recipe-title">${recipe.name}</div>
+                    <div class="recipe-desc">Delicious recipe added by you.</div>
+                `;
+                grid.appendChild(card);
             });
 
-            if (response.ok) {
-                document.getElementById("recipe-name").value = ""; // Clear input
-                fetchRecipes(); // Refresh list
-            } else {
-                alert("Failed to add recipe");
-            }
+        } catch (error) {
+            console.error("Hata:", error);
         }
+    }
 
-        async function logout() {
-          await fetch("/auth/logout", { method: "POST" });
-          window.location.href = "/";
-}
-    </script>
+
+    async function addRecipe() {
+        const nameInput = document.getElementById("recipe-name");
+        const name = nameInput.value;
+
+        if (!name) return alert("Please write a recipe name!");
+
+        const response = await fetch("/recipes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: name })
+        });
+
+        if (response.ok) {
+            nameInput.value = "";
+            fetchRecipes();
+        } else {
+            alert("Failed to add recipe.");
+        }
+    }
+
+
+    async function logout() {
+        await fetch("/auth/logout", { method: "POST" });
+        window.location.href = "/";
+    }
+</script>
+
 </body>
 </html>
