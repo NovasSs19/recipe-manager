@@ -16,7 +16,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // GÜVENLİK YAMASI: Bu alan artık JSON cevaplarında görünmeyecek
     @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
