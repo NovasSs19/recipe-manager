@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Recipe Manager</title>
+  <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .logout-btn { background-color: #dc3545; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .recipe-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; background-color: #f9f9f9; }
+        .add-section { margin-top: 30px; padding: 20px; background-color: #e9ecef; border-radius: 5px; }
+        input { padding: 10px; width: 60%; }
+        button { padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+  <h1>My Recipes</h1>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<div id="recipe-list">
+  <p>Loading recipes...</p>
+</div>
+
+<div class="add-section">
+  <h3>Add New Recipe</h3>
+  <input type="text" id="recipe-name" placeholder="Enter recipe name (e.g. Pasta)">
+  <button onclick="addRecipe()" style="background-color: #007bff; color: white; border: none;">Add Recipe</button>
+</div>
+
+<script>
+        // Check authentication immediately when page loads
+        window.onload = function() {
+            fetchRecipes();
+        };
+
+        async function fetchRecipes() {
+            try {
+                const response = await fetch("/recipes");
+
+                // If user is NOT logged in (401), redirect to Login Page
+                if (response.status === 401) {
+                    window.location.href = "/login.html";
+                    return;
+                }
+
+                const recipes = await response.json();
+                const listDiv = document.getElementById("recipe-list");
+                listDiv.innerHTML = ""; // Clear loading text
+
+                if (recipes.length === 0) {
+                    listDiv.innerHTML = "<p>No recipes found. Add one below!</p>";
+                }
+
+                recipes.forEach(recipe => {
+                    const div = document.createElement("div");
+                    div.className = "recipe-card";
+                    div.innerHTML = `<strong>${recipe.name}</strong>`;
+                    // Add more details here if your Recipe object has them
+                    listDiv.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error("Error fetching recipes:", error);
+            }
+        }
+
+        async function addRecipe() {
+            const name = document.getElementById("recipe-name").value;
+            if (!name) return alert("Please enter a recipe name");
+
+            const response = await fetch("/recipes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name }) // Adjust field name if your DTO is different
+            });
+
+            if (response.ok) {
+                document.getElementById("recipe-name").value = ""; // Clear input
+                fetchRecipes(); // Refresh list
+            } else {
+                alert("Failed to add recipe");
+            }
+        }
+
+        async function logout() {
+          await fetch("/auth/logout", { method: "POST" });
+          window.location.href = "/";
+}
+    </script>
+</body>
+</html>
