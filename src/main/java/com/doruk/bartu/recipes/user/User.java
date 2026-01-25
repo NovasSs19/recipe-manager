@@ -2,12 +2,14 @@ package com.doruk.bartu.recipes.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
 import java.time.Instant;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,44 +31,44 @@ public class User {
     public User() {
     }
 
-
     public User(String email, String passwordHash) {
         this.email = email;
         this.passwordHash = passwordHash;
     }
 
-    // Getters
     public Long getId() {
         return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-
-    // Setters
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
 
+    public String getRole() {
+        return role;
+    }
+
     public void setRole(String role) {
         this.role = role;
     }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
 }

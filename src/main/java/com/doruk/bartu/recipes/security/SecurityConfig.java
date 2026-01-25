@@ -6,7 +6,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -26,6 +25,7 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/css/**",
                                 "/js/**",
+                                "/h2-console/**",
                                 "/error"
                         ).permitAll()
 
@@ -45,12 +45,11 @@ public class SecurityConfig {
                 )
 
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Sadece gerekirse (login olunca) session aç
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
 
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny()) // Clickjacking koruması
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'")) // XSS koruması
+                        .frameOptions(frame -> frame.disable())
                 );
 
         return http.build();
