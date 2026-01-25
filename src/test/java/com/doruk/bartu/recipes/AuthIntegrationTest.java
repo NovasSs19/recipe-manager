@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.junit.jupiter.api.BeforeEach;
+
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,6 +24,18 @@ public class AuthIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private com.doruk.bartu.recipes.recipe.RecipeRepository recipeRepository;
+
+    @Autowired
+    private com.doruk.bartu.recipes.user.UserRepository userRepository;
+
+   @BeforeEach
+    public void setup() {
+        recipeRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @Test
     public void testRegisterAndLoginFlow() throws Exception {
