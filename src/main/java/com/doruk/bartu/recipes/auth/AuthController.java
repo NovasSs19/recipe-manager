@@ -3,6 +3,7 @@ package com.doruk.bartu.recipes.auth;
 import com.doruk.bartu.recipes.user.User;
 import com.doruk.bartu.recipes.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +31,9 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final SecurityContextRepository securityContextRepository =
+            new HttpSessionSecurityContextRepository();
+
     public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -43,25 +49,20 @@ public class AuthController {
         newUser.setPasswordHash(passwordEncoder.encode(req.password()));
         userRepository.save(newUser);
 
-        logger.info("New user registered: {}", req.email()); // Burada log atamasi yapiyoruz
+        logger.info("New user registered: {}", req.email());
         return ResponseEntity.ok(new LoginResponse("User registered successfully", newUser.getId(), newUser.getEmail()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpServletRequest request, HttpServletResponse response) {
         Optional<User> userOpt = userRepository.findByEmail(req.email());
 
-        if (userOpt.isEmpty()) {
-            logger.warn("Failed login attempt (User not found): {}", req.email());
+        if (userOpt.isEmpty() || !passwordEncoder.matches(req.password(), userOpt.get().getPasswordHash())) {
+            logger.warn("Failed login attempt: {}", req.email());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null, null));
         }
 
         User user = userOpt.get();
-
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
-            logger.warn("Failed login attempt (Wrong password): {}", req.email());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null, null));
-        }
 
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -70,8 +71,9 @@ public class AuthController {
         context.setAuthentication(authToken);
         SecurityContextHolder.setContext(context);
 
-        HttpSession session = request.getSession(true);
-        session.setAttribute("SPRING_SECURITY_CONTEXT", context);
+        securityContextRepository.saveContext(context, request, response);
+
+        request.getSession().setAttribute("USER_ID", user.getId());
 
         logger.info("User logged in successfully: {}", user.getEmail());
 
