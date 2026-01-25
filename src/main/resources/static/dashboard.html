@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Recipes - Recipe Manager</title>
     <style>
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -14,7 +13,6 @@
             min-height: 100vh;
             color: #333;
         }
-
 
         header {
             background: rgba(255, 255, 255, 0.95);
@@ -43,26 +41,29 @@
 
         .logout-btn:hover { background: #c0392b; transform: scale(1.05); }
 
-
         .container {
             max-width: 1000px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
-
         .add-box {
             background: white;
             padding: 20px;
             border-radius: 15px;
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
 
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
         .add-box input {
-            flex: 1;
             padding: 12px;
             border: 2px solid #eee;
             border-radius: 10px;
@@ -71,25 +72,29 @@
             transition: 0.3s;
         }
 
+        #recipe-title { flex: 1; font-weight: bold; }
+
+        #recipe-desc { flex: 2; }
+
         .add-box input:focus { border-color: #764ba2; }
 
         .add-btn {
             background: #764ba2;
             color: white;
             border: none;
-            padding: 0 25px;
+            padding: 12px;
             border-radius: 10px;
             font-size: 16px;
             cursor: pointer;
             transition: 0.3s;
+            width: 100%;
         }
 
         .add-btn:hover { background: #5a387e; }
 
-
         .recipe-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
 
@@ -100,8 +105,10 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             transition: transform 0.3s, box-shadow 0.3s;
             cursor: default;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
-
 
         .recipe-card:hover {
             transform: translateY(-5px);
@@ -109,7 +116,7 @@
         }
 
         .recipe-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #444;
             margin-bottom: 10px;
@@ -118,10 +125,10 @@
         }
 
         .recipe-desc {
-            font-size: 14px;
-            color: #777;
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
         }
-
 
         .loading { text-align: center; color: white; font-size: 18px; margin-top: 50px; }
     </style>
@@ -129,14 +136,18 @@
 <body>
 
 <header>
-    <h1>🍳 Recipe Manager</h1>
+    <h1> Recipe Manager</h1>
     <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
     <div class="add-box">
-        <input type="text" id="recipe-name" placeholder="Enter a new recipe name (e.g. Sushi)">
+        <h3>Add New Recipe</h3>
+        <div class="input-group">
+            <input type="text" id="recipe-title" placeholder="Recipe Name (e.g. Pasta)">
+            <input type="text" id="recipe-desc" placeholder="Short Description (e.g. With tomato sauce)">
+        </div>
         <button class="add-btn" onclick="addRecipe()">+ Add Recipe</button>
     </div>
 
@@ -146,17 +157,13 @@
 </div>
 
 <script>
-
     window.onload = function() {
         fetchRecipes();
     };
 
-
     async function fetchRecipes() {
         try {
             const response = await fetch("/recipes");
-
-
             if (response.status === 401) {
                 window.location.href = "/";
                 return;
@@ -171,13 +178,13 @@
                 return;
             }
 
-
             recipes.forEach(recipe => {
                 const card = document.createElement("div");
                 card.className = "recipe-card";
+
                 card.innerHTML = `
-                    <div class="recipe-title">${recipe.name}</div>
-                    <div class="recipe-desc">Delicious recipe added by you.</div>
+                    <div class="recipe-title">${recipe.title}</div>
+                    <div class="recipe-desc">${recipe.description}</div>
                 `;
                 grid.appendChild(card);
             });
@@ -187,27 +194,32 @@
         }
     }
 
-
     async function addRecipe() {
-        const nameInput = document.getElementById("recipe-name");
-        const name = nameInput.value;
+        const titleInput = document.getElementById("recipe-title");
+        const descInput = document.getElementById("recipe-desc");
 
-        if (!name) return alert("Please write a recipe name!");
+        const title = titleInput.value;
+        const description = descInput.value;
+
+        if (!title || !description) return alert("Please fill both fields!");
 
         const response = await fetch("/recipes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: name })
+            body: JSON.stringify({
+                title: title,
+                description: description
+            })
         });
 
         if (response.ok) {
-            nameInput.value = "";
+            titleInput.value = "";
+            descInput.value = "";
             fetchRecipes();
         } else {
             alert("Failed to add recipe.");
         }
     }
-
 
     async function logout() {
         await fetch("/auth/logout", { method: "POST" });
