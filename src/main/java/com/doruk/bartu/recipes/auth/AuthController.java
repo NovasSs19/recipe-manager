@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -40,16 +41,21 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody LoginRequest req) {
-        if (userRepository.findByEmail(req.email()).isPresent()) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
+
+        if (userRepository.findByEmail(req.email).isPresent()) {
             return ResponseEntity.badRequest().body(new LoginResponse("Email already taken", null, null));
         }
+
         User newUser = new User();
-        newUser.setEmail(req.email());
-        newUser.setPasswordHash(passwordEncoder.encode(req.password()));
+        newUser.setEmail(req.email);
+
+        newUser.setPasswordHash(passwordEncoder.encode(req.password));
+
         userRepository.save(newUser);
 
-        logger.info("New user registered: {}", req.email());
+        logger.info("New user registered: {}", req.email);
+
         return ResponseEntity.ok(new LoginResponse("User registered successfully", newUser.getId(), newUser.getEmail()));
     }
 
