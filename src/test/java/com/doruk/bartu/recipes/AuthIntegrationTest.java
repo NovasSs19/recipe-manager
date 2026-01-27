@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,22 +44,23 @@ public class AuthIntegrationTest {
         LoginRequest registerReq = new LoginRequest("integration@test.com", "password123");
 
         mockMvc.perform(post("/auth/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerReq)))
                 .andExpect(status().isOk());
 
-
         LoginRequest loginReq = new LoginRequest("integration@test.com", "password123");
 
         mockMvc.perform(post("/auth/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isOk());
 
-
         LoginRequest wrongReq = new LoginRequest("integration@test.com", "WRONG_PASS");
 
         mockMvc.perform(post("/auth/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(wrongReq)))
                 .andExpect(status().isUnauthorized());
