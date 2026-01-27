@@ -107,6 +107,10 @@
 </div>
 
 <script>
+        window.addEventListener("load", () => {
+            fetch("/auth/csrf", { method: "GET", credentials: "include" });
+        });
+
         function showRegister() {
             document.getElementById('login-form').classList.add('hidden');
             document.getElementById('register-form').classList.remove('hidden');
