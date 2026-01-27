@@ -124,60 +124,86 @@
             document.getElementById('reg-msg').style.display = 'none';
         }
 
-        async function login() {
-            const email = document.getElementById("login-email").value;
-            const password = document.getElementById("login-pass").value;
-            const msg = document.getElementById("login-msg");
+           async function login() {
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-pass").value;
+        const msg = document.getElementById("login-msg");
 
-            if(!email || !password) {
-                showError(msg, "Please fill all fields");
-                return;
-            }
-
-            try {
-                const response = await fetch("/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password })
-                });
-
-                if (response.ok) {
-                    window.location.href = "/dashboard.html";
-                } else {
-                    showError(msg, "Invalid email or password");
-                }
-            } catch (error) {
-                showError(msg, "Server error. Try again later.");
-            }
+        if (!email || !password) {
+            alert("Please fill all fields");
+            return;
         }
 
-        async function register() {
-            const email = document.getElementById("reg-email").value;
-            const password = document.getElementById("reg-pass").value;
-            const msg = document.getElementById("reg-msg");
+        try {
+            const tokenReq = await fetch("/auth/csrf");
+            const tokenData = await tokenReq.json();
 
-            if(!email || !password) {
-                showError(msg, "Please fill all fields");
-                return;
+            const csrfToken = tokenData.token;
+            const csrfHeader = tokenData.headerName;
+
+            const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ email: email, password: password })
+            });
+
+            if (response.ok) {
+                window.location.href = "/dashboard.html";
+            } else {
+                if (msg) msg.innerText = "Invalid credentials";
+                else alert("Login failed!");
             }
-
-            try {
-                const response = await fetch("/auth/register", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password })
-                });
-
-                if (response.ok) {
-                    alert("Registration Successful! Please Login.");
-                    showLogin();
-                } else {
-                    showError(msg, "Email already exists or invalid Password.");
-                }
-            } catch (error) {
-                showError(msg, "Server error.");
-            }
+        } catch (error) {
+            console.error(error);
+            alert("Server error");
         }
+    }
+
+            async function register() {
+        const email = document.getElementById("reg-email").value;
+        const password = document.getElementById("reg-pass").value;
+        const msg = document.getElementById("reg-msg");
+
+        if (!email || !password) {
+            showError(msg, "Please fill all fields");
+            return;
+        }
+
+        try {
+            const tokenReq = await fetch("/auth/csrf");
+            const tokenData = await tokenReq.json();
+
+            const csrfToken = tokenData.token;
+            const csrfHeader = tokenData.headerName;
+
+            const response = await fetch("/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                alert("Registration Successful! Please Login.");
+                location.reload();
+            } else {
+                const data = await response.json();
+                if (data.password) {
+                    showError(msg, data.password);
+                } else {
+                    showError(msg, "Registration failed.");
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            showError(msg, "Server error or Connection refused.");
+        }
+    }
 
         function showError(element, text) {
             element.innerText = text;
